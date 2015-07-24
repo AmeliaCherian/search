@@ -1,6 +1,6 @@
 ##### Documents
 
-There are 131896 LA Times documents divided into 730 files. 10 of these, that have the most relevant documents, were picked below. LA Times seems to have very few relevant documents. Of 57565 judged documents, 3535 are relevant and the rest non-relevant.
+There are 131896 LA Times documents divided into 730 files. 10 of these, with the most number of relevant documents, were picked below. LA Times seems to have very few relevant documents. Of 57565 judged documents, 3535 are relevant and the rest non-relevant.
 
 
 ```
