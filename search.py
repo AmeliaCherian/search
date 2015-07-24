@@ -7,10 +7,15 @@ def xml(arg):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
     soup = BeautifulSoup(open(arg), 'lxml')
-    final=''
-    text = soup.find_all('p')
-    for words in text:
-        final+=words.get_text()
+    final={}
+    these = soup.find_all('doc')
+    for docs in these:
+        the = ''
+        docno = docs.find('docno')
+        text = docs.find_all('p')
+        for words in text:
+            the += formatText(words.get_text())
+        final[docno.get_text().strip()] = the.split(' ')
     print (final)
     return final
 
@@ -35,8 +40,8 @@ def formatText(text):
     exclude2 = set(str(b) for b in range(0, 10))
     text = ''.join(ch for ch in text if ch not in exclude and ch not in exclude2)
     text = re.sub( '\s+', ' ', text).strip()
-    while '  ' in text:
-        text = text.replace('  ', ' ')
+    text = " ".join(text.split())
+    text.strip()
     return text
 
 
@@ -60,8 +65,8 @@ def main(argv):
     # parses the text (takes the text inside the p tags)
     text = []
     for theFile in files:
-        text.append(formatText(xml(theFile)).split(' '))
-    #print (text)
+        f = xml(theFile)
+        text.append(formatText(t for t in h for h in f.values()))
     
     # goes through each word in each of the documents
     # and adds it to a term dictionary
@@ -76,7 +81,7 @@ def main(argv):
                     terms[y][docNo]=1
             else:
                 terms[y] = {docNo: 1}
-    print (terms)
+    #print (terms)
     
     # weighing options
     options = input ('enter 1 - idf, 2 - length normalization: ')
@@ -84,7 +89,7 @@ def main(argv):
         N = len(text)
         for x in terms:
             n = len(terms[x])
-            print (terms[x])
+            #print (terms[x])
             for y in terms[x]:
                 terms[x][y] = idf(terms[x][y], n, N)
     if '2' in options:
@@ -97,7 +102,7 @@ def main(argv):
         for x in terms:
             terms[x] = length(terms[x], avg, length[int(x)])
 
-    print (terms)
+    #print (terms)
     # user input
     query = input('Search: ')
     keyWords = formatText(query).split(' ')
