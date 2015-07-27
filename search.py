@@ -1,30 +1,37 @@
 import sys, string, operator, re, math
+from itertools import islice
 from bs4 import BeautifulSoup
 
-# python search/search.py search-text
+#python search/search.py search/docs/*
 
 def xml(arg, d):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
+    
     soup = BeautifulSoup(open(arg), 'lxml')
     final={}
     these = soup.find_all('doc')
+    
     for docs in these:
         the = ''
         docno = docs.find('docno')
         text = docs.find_all('p')
+        
         for words in text:
             the += formatText(words.get_text())
         final[docno.get_text().strip()] = the.split(' ')
+    
     return final
 
 def readfiles(f):
     # takes a file that contains names of files
     # and returns a list of those files
+    
     files = []
     with open (f, 'r') as fp:
         for line in fp:
             files.append(line[0:len(line)-1])
+    
     return files
 
 
@@ -33,6 +40,7 @@ def formatText(text):
     #  - makes it all lowercase
     #  - replaces punctuation and numbers with spaces
     #  - removes multiple spaces
+    
     text = text.lower()
     text.replace('-', ' ')
     exclude = set(string.punctuation)
@@ -41,6 +49,7 @@ def formatText(text):
     text = re.sub( '\s+', ' ', text).strip()
     text = " ".join(text.split())
     text.strip()
+    
     return text
 
 
@@ -48,18 +57,23 @@ def idf(tf, n, N):
     # tf = term frequency
     # n = num docs with term
     # N = num docs total
+    
     w = -1*tf*math.log((n/N), 2)
+    
     return w
 
-def length(w, l, A):
+def length(tf, l, A):
     # current weight
     # l = length of current doc
     # A = average length of docs
-    w /= (l/A)
+    
+    w = tf/(l/A)
+
     return w
 
 def main(argv):
-    files = readfiles(argv[1])
+    #files = readfiles(argv[1])
+    files = argv[1:]
 
     # parses the text (takes the text inside the p tags)
     text = {}
@@ -79,18 +93,16 @@ def main(argv):
                     terms[y][docNo]=1
             else:
                 terms[y] = {docNo: 1}
-    print (terms)
     
     # weighing options
-    options = input ('enter 1 - idf, 2 - length normalization: ')
+    options = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
     if '1' in options:
         N = len(text)
         for x in terms:
             n = len(terms[x])
             for y in terms[x]:
                 terms[x][y] = idf(terms[x][y], n, N)
-        print (terms)
-    
+
     if '2' in options:
         avg = 0
         lengths = []
@@ -101,7 +113,9 @@ def main(argv):
         for x in terms:
             for y in terms[x]:
                 terms[x][y] = length(terms[x][y], len(text[y]), avg)
-        print (terms)
+
+    #print (list(islice(terms.items(), 5)))
+
     # user input
     query = input('Search: ')
     keyWords = formatText(query).split(' ')
