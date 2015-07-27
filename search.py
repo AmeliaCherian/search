@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 
 # python search/search.py search-text
 
-def xml(arg):
+def xml(arg, d):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
     soup = BeautifulSoup(open(arg), 'lxml')
@@ -16,7 +16,6 @@ def xml(arg):
         for words in text:
             the += formatText(words.get_text())
         final[docno.get_text().strip()] = the.split(' ')
-    print (final)
     return final
 
 def readfiles(f):
@@ -49,7 +48,7 @@ def idf(tf, n, N):
     # tf = term frequency
     # n = num docs with term
     # N = num docs total
-    w = tf*math.log((n/N), 2)
+    w = -1*tf*math.log((n/N), 2)
     return w
 
 def length(w, l, A):
@@ -63,17 +62,16 @@ def main(argv):
     files = readfiles(argv[1])
 
     # parses the text (takes the text inside the p tags)
-    text = []
+    text = {}
     for theFile in files:
-        f = xml(theFile)
-        text.append(formatText(t for t in h for h in f.values()))
-    
+        text = (xml(theFile, text))
+        
     # goes through each word in each of the documents
     # and adds it to a term dictionary
     terms = {}
-    for x in range(len(text)):
+    for x in text:
         for y in text[x]:
-            docNo = str(x+1)
+            docNo = x
             if y in terms:
                 if docNo in terms[y]:
                     terms[y][docNo]+=1
@@ -81,7 +79,7 @@ def main(argv):
                     terms[y][docNo]=1
             else:
                 terms[y] = {docNo: 1}
-    #print (terms)
+    print (terms)
     
     # weighing options
     options = input ('enter 1 - idf, 2 - length normalization: ')
@@ -89,9 +87,10 @@ def main(argv):
         N = len(text)
         for x in terms:
             n = len(terms[x])
-            #print (terms[x])
             for y in terms[x]:
                 terms[x][y] = idf(terms[x][y], n, N)
+        print (terms)
+    
     if '2' in options:
         avg = 0
         lengths = []
@@ -100,9 +99,9 @@ def main(argv):
             lengths.append(len(x))
         avg /= len(text)
         for x in terms:
-            terms[x] = length(terms[x], avg, length[int(x)])
-
-    #print (terms)
+            for y in terms[x]:
+                terms[x][y] = length(terms[x][y], len(text[y]), avg)
+        print (terms)
     # user input
     query = input('Search: ')
     keyWords = formatText(query).split(' ')
@@ -121,8 +120,6 @@ def main(argv):
     # prints the sorted (in reverse) dictionary
     foundDocs = sorted(foundDocs.items(), key=operator.itemgetter(1), reverse=True)
     print (foundDocs)
-
-
 
 if __name__=="__main__":
     main(sys.argv)
