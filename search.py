@@ -47,7 +47,7 @@ def formatText(text):
     exclude2 = set(str(b) for b in range(0, 10))
     text = ''.join(ch for ch in text if ch not in exclude and ch not in exclude2)
     text = re.sub( '\s+', ' ', text).strip()
-    text = " ".join(text.split())
+    text = ' '.join(text.split())
     text.strip()
     
     return text
@@ -71,9 +71,9 @@ def length(tf, l, A):
 
     return w
 
-def main(argv):
+def main(q, argv):
     #files = readfiles(argv[1])
-    files = argv[1:]
+    files = argv[2:]
 
     # parses the text (takes the text inside the p tags)
     text = {}
@@ -118,6 +118,8 @@ def main(argv):
 
     # user input
     query = input('Search: ')
+    #query = q
+    
     keyWords = formatText(query).split(' ')
     
     # goes through each word in the query
@@ -134,6 +136,7 @@ def main(argv):
     # prints the sorted (in reverse) dictionary
     foundDocs = sorted(foundDocs.items(), key=operator.itemgetter(1), reverse=True)
     print (foundDocs)
+    return foundDocs
 
-if __name__=="__main__":
-    main(sys.argv)
+#if __name__=="__main__":
+#    main(q, sys.argv)

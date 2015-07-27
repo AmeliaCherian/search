@@ -1,22 +1,32 @@
 import sys
+from search import main
 
-
-def main (argv, rankList):
-    files = argv[1:]
-
+def main2 (argv):
+    files = argv[1:2]
+    topic = argv[2]
+    topics = {}
+    with open (topic, 'r') as f:
+        for lines in f:
+            info = lines.split(' ')
+            topics[info[0]] = info[2]
+    print (topics)
+        
     qrel = {}
     for x in files:
         with open (x, 'r') as f:
             for lines in f:
                 info = lines.split(' ')
-                if info[0] in qrel:
-                    qrel[info[0]][info[2]] = (info[3]).replace('\n', '')
-                else:
-                    qrel[info[0]] = {info[2]:info[3].replace('\n','')}
-    print (qrel)
+                torf = (info[3]).replace('\n', '')
+                if torf == '1':
+                    if info[0] in qrel:
+                        qrel[info[0]][info[2]] = 1 
+                    else:
+                        qrel[info[0]] = {info[2]:1}
+    for q in topics:
+        ret = main(topics[q], sys.argv[3:])
+        rev = qrel[q]
     
-    numC = len(qrels)
-    for x in rankList:
+    for x in rev:
         if x in qrels:
             cP+=1
             qrels.pop(x)
@@ -26,4 +36,4 @@ def main (argv, rankList):
     print (cP, fP, fN)
     
 if __name__ == '__main__':
-    main(sys.argv, [0,0])
+    main2(sys.argv)
