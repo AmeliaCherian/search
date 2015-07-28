@@ -160,7 +160,7 @@ def main(files):
     with open (topic, 'r') as f:
         for lines in f:
             info = lines.split(' ')
-            topics[info[0]] = info[2]
+            topics[info[0]] = info[1]
     
     terms = findTerms(sys.argv[3:])
 
@@ -172,7 +172,11 @@ def main(files):
         qrel = qrels([files[2]])
         rel = qrel[q]
 
+        print (q, topics[q])
+        print (ret)
+        print (rel)
         print (evaluate(ret, rel))
+        print ('\n')
 
         
 if __name__=="__main__":

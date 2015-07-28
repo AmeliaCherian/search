@@ -16,9 +16,8 @@ def evaluate (rlist, qrel):
     retrel=0
     for docno in rlist:
         if docno in qrel:
-            if qrel[docno]==1:
+            if qrel[docno]=='1':
                 retrel+=1
-    print (retrel)
     
     if ret!=0 and rel!=0:
         precision = retrel/ret
