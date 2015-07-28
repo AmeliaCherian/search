@@ -18,6 +18,8 @@ def evaluate (rlist, qrel):
         if docno in qrel:
             if qrel[docno]==1:
                 retrel+=1
+    print (retrel)
+    
     if ret!=0 and rel!=0:
         precision = retrel/ret
         recall = retrel/rel
