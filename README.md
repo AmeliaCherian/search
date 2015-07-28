@@ -22,9 +22,12 @@ TOTAL	 131  2143
 ##### Topics
 
 ```
-301-350.T
-351-400.T
-401-450.T
+file	  numtopics
+========= =========
+ten.T	  65
+301-350.T 50
+351-400.T 50
+401-450.T 50
 ```
 
 The TITLE portions of the TREC topics, in three files, containing 50 topics each. The file's structure is as shown here; the topic ID followed by the text.
@@ -35,15 +38,20 @@ The TITLE portions of the TREC topics, in three files, containing 50 topics each
 313  Magnetic Levitation-Maglev
 ```
 
+ten.T are the 65 topics which have at least one relevant document in the set of 2143 LA Times documents (bundled in ten files). 
+
 ##### Qrels
 
 ```
-301-350.cd45.LA
-351-400.cd45.LA
-401-450.cd45.LA
+file            numqrels numtopics
+=============== ======== =========
+ten.LA          573	 65    
+301-350.cd45.LA 13815	 50
+351-400.cd45.LA	22491	 50
+401-450.cd45.LA	21259	 50
 ```
 
-Qrels for the LA Times documents. Each file is for a range of 50 TREC topics. The file's structure is as shown below. The columns in order are topic id, unused, docno and the judgement. The second field is of no use. The relevance is binary, denoted by zero or one.
+Qrels for the LA Times documents. Each file is for a range of 50 TREC topics. The file's structure is as shown below. The columns in order are topic id, unused, docno and the judgement. The second field is of no use. The relevance is binary, denoted by zero or one, in the fourth field.
 
 ```
 301 0 LA122889-0124 0
@@ -53,3 +61,5 @@ Qrels for the LA Times documents. Each file is for a range of 50 TREC topics. Th
 302 0 LA010589-0059 1
 302 0 LA010690-0044 0
 ```
+
+ten.LA is a subset containing qrels for only the 2143 documents in the ten-file collection, and, only the 65 topics which have at least one relevant document.
