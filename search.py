@@ -1,15 +1,16 @@
 import sys, string, operator, re, math
 from itertools import islice
 from bs4 import BeautifulSoup
+from eval import evaluate
 
-#python search/search.py search/docs/*
+#python search.py topics/301-350.T qrels/301-350.cd45.LA docs/*
 
 def xml(arg, d):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
     
     soup = BeautifulSoup(open(arg), 'lxml')
-    final={}
+    final=d
     these = soup.find_all('doc')
     
     for docs in these:
@@ -67,13 +68,13 @@ def length(tf, l, A):
     # l = length of current doc
     # A = average length of docs
     
-    w = tf/(l/A)
+    w = tf/((l/A)**(1/2))
 
     return w
 
-def main(q, argv):
+def findTerms(argv):
     #files = readfiles(argv[1])
-    files = argv[2:]
+    files = argv
 
     # parses the text (takes the text inside the p tags)
     text = {}
@@ -113,30 +114,67 @@ def main(q, argv):
         for x in terms:
             for y in terms[x]:
                 terms[x][y] = length(terms[x][y], len(text[y]), avg)
-
+    return terms
     #print (list(islice(terms.items(), 5)))
 
-    # user input
-    query = input('Search: ')
-    #query = q
+
+def qrels(files):
+    # files is a list of files
+    qrel = {}
+    for x in files:
+        with open (x, 'r') as f:
+            for lines in f:
+                info = lines.split(' ')
+                torf = (info[3]).replace('\n', '')
+                if info[0] in qrel:
+                    qrel[info[0]][info[2]]=torf
+                else:
+                    qrel[info[0]] = {info[2]:torf}
+    return (qrel)
     
+def ranks (q, terms):    
+    
+    # user input
+    query = q
     keyWords = formatText(query).split(' ')
     
     # goes through each word in the query
     # and adds up the occurences of the words from each document
-    foundDocs = {}
+    foundDocs ={}
     for word in keyWords:
-        for doc in terms[word]:
-            if doc in foundDocs:
-                foundDocs[doc]+=terms[word][doc]
-            else:
-                foundDocs[doc]=terms[word][doc]
+        if word in terms:
+            for doc in terms[word]:
+                if doc in foundDocs:
+                    foundDocs[doc]+=terms[word][doc]
+                else:
+                    foundDocs[doc]=terms[word][doc]
 
     
     # prints the sorted (in reverse) dictionary
-    foundDocs = sorted(foundDocs.items(), key=operator.itemgetter(1), reverse=True)
-    print (foundDocs)
+    #foundDocs = sorted(foundDocs.items(), key=operator.itemgetter(1), reverse=True)
     return foundDocs
 
-#if __name__=="__main__":
-#    main(q, sys.argv)
+def main(files):
+    topic = files[1]
+    topics = {}
+    with open (topic, 'r') as f:
+        for lines in f:
+            info = lines.split(' ')
+            topics[info[0]] = info[2]
+    
+    terms = findTerms(sys.argv[3:])
+
+    
+    for q in topics:
+        ret = ranks(topics[q], terms)
+        ret = list(ret.keys())
+ 
+        qrel = qrels([files[2]])
+        rel = qrel[q]
+
+        print (evaluate(ret, rel))
+
+        
+if __name__=="__main__":
+    #q = input('Search: ')
+    print (main(sys.argv))
