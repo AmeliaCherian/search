@@ -12,14 +12,14 @@ def evaluate (rlist, qrel):
             relList.append(r)
 
     rel = len(relList)
-
-    retrel=0
-    for docno in rlist:
-        if docno in qrel:
-            if qrel[docno]=='1':
-                retrel+=1
     
     if ret!=0 and rel!=0:
+        retrel=0
+        for docno in rlist:
+            if docno in qrel:
+                if qrel[docno]=='1':
+                    retrel+=1
+        
         precision = retrel/ret
         recall = retrel/rel
         return [precision, recall]

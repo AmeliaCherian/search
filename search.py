@@ -64,17 +64,17 @@ def idf(tf, n, N):
     return w
 
 def length(tf, l, A):
-    # current weight
+    # tf = current weight
     # l = length of current doc
     # A = average length of docs
     
     w = tf/((l/A)**(1/2))
+    #put sq rt to lower length's effect on weight
 
     return w
 
-def findTerms(argv):
-    #files = readfiles(argv[1])
-    files = argv
+def findTerms(files):
+    #files = readfiles(files[1])
 
     # parses the text (takes the text inside the p tags)
     text = {}
@@ -84,9 +84,8 @@ def findTerms(argv):
     # goes through each word in each of the documents
     # and adds it to a term dictionary
     terms = {}
-    for x in text:
-        for y in text[x]:
-            docNo = x
+    for docNo in text:
+        for y in text[docNo]:
             if y in terms:
                 if docNo in terms[y]:
                     terms[y][docNo]+=1
@@ -106,11 +105,9 @@ def findTerms(argv):
 
     if '2' in options:
         avg = 0
-        lengths = []
-        for x in text:
-            avg+=len(x)
-            lengths.append(len(x))
-        avg /= len(text)
+        lengths = [len(x) for x in text]
+        avg = float(sum(lengths))/len(lengths)
+        
         for x in terms:
             for y in terms[x]:
                 terms[x][y] = length(terms[x][y], len(text[y]), avg)
@@ -163,13 +160,12 @@ def main(files):
             topics[info[0]] = info[1]
     
     terms = findTerms(sys.argv[3:])
+    qrel = qrels([files[2]])
 
-    
     for q in topics:
         ret = ranks(topics[q], terms)
         ret = list(ret.keys())
  
-        qrel = qrels([files[2]])
         rel = qrel[q]
 
         print (q, topics[q])
