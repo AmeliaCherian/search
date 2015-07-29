@@ -1,5 +1,6 @@
 import sys, string, operator, re, math
 from itertools import islice
+from collections import defaultdict
 from bs4 import BeautifulSoup
 from eval import evaluate
 
@@ -74,7 +75,7 @@ def length(tf, l, A):
     return w
 
 def findTerms(files):
-    #files = readfiles(files[1])
+    #files = readfiles(files[3])
 
     # parses the text (takes the text inside the p tags)
     text = {}
@@ -83,16 +84,10 @@ def findTerms(files):
         
     # goes through each word in each of the documents
     # and adds it to a term dictionary
-    terms = {}
+    terms = defaultdict(lambda: defaultdict(lambda:0))
     for docNo in text:
         for y in text[docNo]:
-            if y in terms:
-                if docNo in terms[y]:
-                    terms[y][docNo]+=1
-                else:
-                    terms[y][docNo]=1
-            else:
-                terms[y] = {docNo: 1}
+            terms[y][docNo]+=1
     
     # weighing options
     options = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
@@ -117,16 +112,14 @@ def findTerms(files):
 
 def qrels(files):
     # files is a list of files
-    qrel = {}
+    qrel = defaultdict(lambda: defaultdict(lambda: 0))
     for x in files:
-        with open (x, 'r') as f:
+         with open (x, 'r') as f:
             for lines in f:
                 info = lines.split(' ')
                 torf = (info[3]).replace('\n', '')
-                if info[0] in qrel:
-                    qrel[info[0]][info[2]]=torf
-                else:
-                    qrel[info[0]] = {info[2]:torf}
+                qrel[info[0]][info[2]]=torf
+
     return (qrel)
     
 def ranks (q, terms):    
@@ -137,14 +130,12 @@ def ranks (q, terms):
     
     # goes through each word in the query
     # and adds up the occurences of the words from each document
-    foundDocs ={}
+    foundDocs =defaultdict(lambda:0)
     for word in keyWords:
         if word in terms:
             for doc in terms[word]:
-                if doc in foundDocs:
-                    foundDocs[doc]+=terms[word][doc]
-                else:
-                    foundDocs[doc]=terms[word][doc]
+                foundDocs[doc]+=terms[word][doc]
+            
 
     
     # prints the sorted (in reverse) dictionary
