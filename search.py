@@ -2,7 +2,7 @@ import sys, string, operator, re, math
 from itertools import islice
 from collections import defaultdict
 from bs4 import BeautifulSoup
-from eval import evaluate
+from evaluate import evaluate
 
 #python search.py topics/301-350.T qrels/301-350.cd45.LA docs/*
 
@@ -60,7 +60,7 @@ def idf(tf, n, N):
     # n = num docs with term
     # N = num docs total
     
-    w = -1*tf*math.log((n/N), 2)
+    w = tf*math.log((N/n), 2)
     
     return w
 
@@ -135,37 +135,42 @@ def ranks (q, terms):
         if word in terms:
             for doc in terms[word]:
                 foundDocs[doc]+=terms[word][doc]
-            
-
     
     # prints the sorted (in reverse) dictionary
-    #foundDocs = sorted(foundDocs.items(), key=operator.itemgetter(1), reverse=True)
+    foundDocs = dict(sorted(foundDocs.items(), key=operator.itemgetter(1), reverse=True))
     return foundDocs
 
 def main(files):
+    with open ("prvalues.txt", "w"): pass
+    with open ("ranks.txt", "w"):  pass
+    
     topic = files[1]
     topics = {}
     with open (topic, 'r') as f:
         for lines in f:
             info = lines.split(' ')
-            topics[info[0]] = info[1]
+            topics[info[0]] = ' '.join(info[1:])
     
     terms = findTerms(sys.argv[3:])
     qrel = qrels([files[2]])
 
     for q in topics:
-        ret = ranks(topics[q], terms)
-        ret = list(ret.keys())
- 
+        rank = ranks(topics[q], terms)
+        some = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
+        ret = list(rank.keys())
+        count = 0
+        for doc in some:
+            with open ('ranks.txt', 'a') as f:
+                count+=1
+                f.write(q+' Q0 '+doc[0]+' '+str(count)+' '+str(doc[1])+' x\n')
+
         rel = qrel[q]
 
         print (q, topics[q])
-        print (ret)
-        print (rel)
-        print (evaluate(ret, rel))
+        print (evaluate(q, ret, rel))
         print ('\n')
 
         
 if __name__=="__main__":
     #q = input('Search: ')
-    print (main(sys.argv))
+    main(sys.argv)
