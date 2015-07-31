@@ -9,19 +9,30 @@ from evaluate import evaluate
 def xml(arg, d):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
-    
+
+    options = ("1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ")
     soup = BeautifulSoup(open(arg), 'lxml')
     final=d
+
     these = soup.find_all('doc')
     
     for docs in these:
         the = ''
         docno = docs.find('docno')
-        text = docs.find_all('p')
-        
-        for words in text:
-            the += formatText(words.get_text())
-        final[docno.get_text().strip()] = the.split(' ')
+        if options == 1:
+            text = docs.find_all('doc')
+        if options == 2:
+            text = docs.find_all('doc')
+            for words in text:
+                the += formatText(words.get_text())
+                final[docno.get_text().strip()] = the.split(' ')
+        if options == 3:
+            text = docse.find_all('text')
+        if options == 4:
+            text = docs.find_all('text')
+            for words in text:
+                the += formatText(words.get_text())
+                final[docno.get_text().strip()] = the.split(' ')
     
     return final
 
@@ -55,17 +66,28 @@ def formatText(text):
     return text
 
 
-def idf(tf, n, N):
+def weight(terms):
     # tf = term frequency
     # n = num docs with term
     # N = num docs total
-    
+    options = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
+    if '1' in options:
+        N = len(text)
+        for x in terms:
+            n = len(terms[x])
+            for y in terms[x]:
+                terms[x][y] = idf(terms[x][y], n, N)
+
+    if '2' in options:
+        avg = 0
+        lengths = [len(x) for x in text]
+        avg = float(sum(lengths))/len(lengths)
+        
+        for x in terms:
+            for y in terms[x]:
+                terms[x][y] = length(terms[x][y], len(text[y]), avg)
     w = tf*math.log((N/n), 2)
     
-    return w
-
-def length(tf, l, A):
-    # tf = current weight
     # l = length of current doc
     # A = average length of docs
     
@@ -90,22 +112,7 @@ def findTerms(files):
             terms[y][docNo]+=1
     
     # weighing options
-    options = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
-    if '1' in options:
-        N = len(text)
-        for x in terms:
-            n = len(terms[x])
-            for y in terms[x]:
-                terms[x][y] = idf(terms[x][y], n, N)
-
-    if '2' in options:
-        avg = 0
-        lengths = [len(x) for x in text]
-        avg = float(sum(lengths))/len(lengths)
-        
-        for x in terms:
-            for y in terms[x]:
-                terms[x][y] = length(terms[x][y], len(text[y]), avg)
+    terms = weight(terms)
     return terms
     #print (list(islice(terms.items(), 5)))
 
@@ -127,14 +134,18 @@ def ranks (q, terms):
     # user input
     query = q
     keyWords = formatText(query).split(' ')
-    
+
+    options = ("bin or not?")
     # goes through each word in the query
     # and adds up the occurences of the words from each document
     foundDocs =defaultdict(lambda:0)
     for word in keyWords:
         if word in terms:
             for doc in terms[word]:
-                foundDocs[doc]+=terms[word][doc]
+                if options ==1:
+                    foundDocs[doc]==1
+                else:
+                    foundDocs[doc]+=terms[word][doc]
     
     # prints the sorted (in reverse) dictionary
     foundDocs = dict(sorted(foundDocs.items(), key=operator.itemgetter(1), reverse=True))

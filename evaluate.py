@@ -25,5 +25,6 @@ def evaluate (id, rlist, qrel):
         with open ("prvalues.txt", "a") as f:
             f.write(id+' '+str(precision)+' '+str(recall)+'\n')
         return (precision, recall)
+
 #if __name__ == '__main__':
 #    evaluate(sys.argv)
