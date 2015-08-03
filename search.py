@@ -6,11 +6,10 @@ from evaluate import evaluate
 
 #python search.py topics/301-350.T qrels/301-350.cd45.LA docs/*
 
-def xml(arg, d):
+def xml(options, arg, d):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
 
-    options = input("1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ")
     soup = BeautifulSoup(open(arg), 'lxml')
     final=d
 
@@ -20,21 +19,17 @@ def xml(arg, d):
         the = ''
         docno = docs.find('docno')
         if options == '1':
-            text = docs.find_all('doc')
-            for words in text:
-                the += formatText(words.get_text())
-                final[docno.get_text().strip()] = the.split(' ')
+            the += formatText(str(docs))
+            final[docno.get_text().strip()] = the.split(' ')
 
         if options == '2':
-            text = docs.find_all('doc')
-            for words in text:
-                the += formatText(words.get_text())
-                final[docno.get_text().strip()] = the.split(' ')
+           the += formatText(docs.get_text())
+           final[docno.get_text().strip()] = the.split(' ')
 
         if options == '3':
-            text = docs.find_all('text')
-            for words in text:
-                the += formatText(words.get_text())
+            text2 = docs.find_all('text')
+            for words in text2:
+                the += formatText(str(text2))
                 final[docno.get_text().strip()] = the.split(' ')
 
         if options == '4':
@@ -42,7 +37,7 @@ def xml(arg, d):
             for words in text:
                 the += formatText(words.get_text())
                 final[docno.get_text().strip()] = the.split(' ')
-
+    print (the)
     print(final) 
     return final
 
@@ -67,8 +62,8 @@ def formatText(text):
     text = text.lower()
     text.replace('-', ' ')
     exclude = set(string.punctuation)
-    exclude2 = set(str(b) for b in range(0, 10))
-    text = ''.join(ch for ch in text if ch not in exclude and ch not in exclude2)
+    #exclude2 = set(str(b) for b in range(0, 10))
+    text = ''.join(ch for ch in text if ch not in exclude) #and ch not in exclude2)
     text = re.sub( '\s+', ' ', text).strip()
     text = ' '.join(text.split())
     text.strip()
@@ -76,27 +71,20 @@ def formatText(text):
     return text
 
 
-def weight(terms):
+def weight(options, tf, n, N, l, A):
     # tf = term frequency
     # n = num docs with term
     # N = num docs total
-    options = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
+
+    w = tf
     
     if '1' in options:
-        N = len(text)
-        for x in terms:
-            n = len(terms[x])
-            for y in terms[x]:
-                terms[x][y] = terms[x][y]*math.log((N/n), 2)
+       w = w *math.log((N/n), 2)
 
+    # l = length of current doc
+    # A = average length of docs
     if '2' in options:
-        avg = 0
-        lengths = [len(x) for x in text]
-        avg = float(sum(lengths))/len(lengths)
-        
-        for x in terms:
-            for y in terms[x]:
-                terms[x][y] = terms[x][y]/(len(text[y]/avg)**(1/2))
+        w = w/((l/A)**(1/2))
        
     return w
 
@@ -105,8 +93,10 @@ def findTerms(files):
 
     # parses the text (takes the text inside the p tags)
     text = {}
+    options = input("1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ")
+    
     for theFile in files:
-        text = (xml(theFile, text))
+        text = (xml(options, theFile, text))
         
     # goes through each word in each of the documents
     # and adds it to a term dictionary
@@ -116,7 +106,18 @@ def findTerms(files):
             terms[y][docNo]+=1
     
     # weighing options
-    terms = weight(terms)
+    options = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
+    N = len(text)
+    
+    lengths = [len(x) for x in text]
+    avg = float(sum(lengths))/len(lengths)
+        
+    for x in terms:
+        n = len(terms[x])
+        for y in terms[x]:
+            terms[x][y] = weight(options, terms[x][y], n, N, len(text[y]), avg)
+
+                
     return terms
     #print (list(islice(terms.items(), 5)))
 
@@ -156,9 +157,12 @@ def ranks (q, terms):
     return foundDocs
 
 def main(files):
+    
+    # clears files
     with open ("prvalues.txt", "w"): pass
     with open ("ranks.txt", "w"):  pass
-    
+
+
     topic = files[1]
     topics = {}
     with open (topic, 'r') as f:
