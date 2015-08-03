@@ -108,7 +108,7 @@ def findTerms(files):
         for y in text[docNo]:
             if y not in stop:
                 terms[y][docNo]+=1
-    print (terms)
+
     # weighing options
     options = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
     N = len(text)
@@ -138,7 +138,7 @@ def qrels(files):
 
     return (qrel)
     
-def ranks (q, terms, option):    
+def ranks (q, terms, options):    
     
     # user input
     query = q
@@ -150,7 +150,7 @@ def ranks (q, terms, option):
     for word in keyWords:
         if word in terms:
             for doc in terms[word]:
-                if options ==1:
+                if options == 1:
                     foundDocs[doc]==1
                 else:
                     foundDocs[doc]+=terms[word][doc]
@@ -178,7 +178,7 @@ def main(files):
 
     options = input("1 - binary, 2 - not?")
     for q in topics:
-        rank = ranks(topics[q], terms)
+        rank = ranks(topics[q], terms, options)
         some = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
         ret = list(rank.keys())
         count = 0
