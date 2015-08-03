@@ -20,25 +20,23 @@ def xml(options, arg, d):
         docno = docs.find('docno')
         if options == '1':
             the += formatText(str(docs))
-            final[docno.get_text().strip()] = the.split(' ')
-
+            
         if options == '2':
            the += formatText(docs.get_text())
-           final[docno.get_text().strip()] = the.split(' ')
-
+           
         if options == '3':
             text2 = docs.find_all('text')
             for words in text2:
                 the += formatText(str(text2))
-                final[docno.get_text().strip()] = the.split(' ')
-
+               
         if options == '4':
             text = docs.find_all('text')
             for words in text:
                 the += formatText(words.get_text())
-                final[docno.get_text().strip()] = the.split(' ')
-    print (the)
-    print(final) 
+
+        
+        final[docno.get_text().strip()] = the.split(' ')
+
     return final
 
 def readfiles(f):
@@ -91,20 +89,26 @@ def weight(options, tf, n, N, l, A):
 def findTerms(files):
     #files = readfiles(files[3])
 
-    # parses the text (takes the text inside the p tags)
+    stop = ["a", "an", "and", "are", "as", "at", "be", "but", "by",
+            "for", "if", "in", "into", "is", "it", "no", "not", "of",
+            "on", "or", "such", "that", "the", "their", "then", "there",
+            "these", "they", "this", "to", "was", "will", "with"]
+    
+    # parses the text
     text = {}
     options = input("1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ")
     
     for theFile in files:
         text = (xml(options, theFile, text))
-        
+     
     # goes through each word in each of the documents
     # and adds it to a term dictionary
     terms = defaultdict(lambda: defaultdict(lambda:0))
     for docNo in text:
         for y in text[docNo]:
-            terms[y][docNo]+=1
-    
+            if y not in stop:
+                terms[y][docNo]+=1
+    print (terms)
     # weighing options
     options = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
     N = len(text)
@@ -134,13 +138,12 @@ def qrels(files):
 
     return (qrel)
     
-def ranks (q, terms):    
+def ranks (q, terms, option):    
     
     # user input
     query = q
     keyWords = formatText(query).split(' ')
 
-    options = ("bin or not?")
     # goes through each word in the query
     # and adds up the occurences of the words from each document
     foundDocs =defaultdict(lambda:0)
@@ -173,6 +176,7 @@ def main(files):
     terms = findTerms(sys.argv[3:])
     qrel = qrels([files[2]])
 
+    options = input("1 - binary, 2 - not?")
     for q in topics:
         rank = ranks(topics[q], terms)
         some = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
