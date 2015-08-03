@@ -10,7 +10,7 @@ def xml(arg, d):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
 
-    options = ("1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ")
+    options = input("1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ")
     soup = BeautifulSoup(open(arg), 'lxml')
     final=d
 
@@ -19,21 +19,31 @@ def xml(arg, d):
     for docs in these:
         the = ''
         docno = docs.find('docno')
-        if options == 1:
-            text = docs.find_all('doc')
-        if options == 2:
+        if options == '1':
             text = docs.find_all('doc')
             for words in text:
                 the += formatText(words.get_text())
                 final[docno.get_text().strip()] = the.split(' ')
-        if options == 3:
-            text = docse.find_all('text')
-        if options == 4:
+
+        if options == '2':
+            text = docs.find_all('doc')
+            for words in text:
+                the += formatText(words.get_text())
+                final[docno.get_text().strip()] = the.split(' ')
+
+        if options == '3':
             text = docs.find_all('text')
             for words in text:
                 the += formatText(words.get_text())
                 final[docno.get_text().strip()] = the.split(' ')
-    
+
+        if options == '4':
+            text = docs.find_all('text')
+            for words in text:
+                the += formatText(words.get_text())
+                final[docno.get_text().strip()] = the.split(' ')
+
+    print(final) 
     return final
 
 def readfiles(f):
@@ -71,12 +81,13 @@ def weight(terms):
     # n = num docs with term
     # N = num docs total
     options = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
+    
     if '1' in options:
         N = len(text)
         for x in terms:
             n = len(terms[x])
             for y in terms[x]:
-                terms[x][y] = idf(terms[x][y], n, N)
+                terms[x][y] = terms[x][y]*math.log((N/n), 2)
 
     if '2' in options:
         avg = 0
@@ -85,15 +96,8 @@ def weight(terms):
         
         for x in terms:
             for y in terms[x]:
-                terms[x][y] = length(terms[x][y], len(text[y]), avg)
-    w = tf*math.log((N/n), 2)
-    
-    # l = length of current doc
-    # A = average length of docs
-    
-    w = tf/((l/A)**(1/2))
-    #put sq rt to lower length's effect on weight
-
+                terms[x][y] = terms[x][y]/(len(text[y]/avg)**(1/2))
+       
     return w
 
 def findTerms(files):
@@ -174,7 +178,7 @@ def main(files):
             with open ('ranks.txt', 'a') as f:
                 count+=1
                 f.write(q+' Q0 '+doc[0]+' '+str(count)+' '+str(doc[1])+' x\n')
-
+   
         rel = qrel[q]
 
         print (q, topics[q])
