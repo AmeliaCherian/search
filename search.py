@@ -3,6 +3,7 @@ from itertools import islice
 from collections import defaultdict
 from bs4 import BeautifulSoup
 from evaluate import evaluate
+from porterstemmer import toStem
 
 #python search.py topics/301-350.T qrels/301-350.cd45.LA docs/*
 
@@ -65,7 +66,8 @@ def formatText(text):
     text = re.sub( '\s+', ' ', text).strip()
     text = ' '.join(text.split())
     text.strip()
-    
+    text = toStem([text])
+    print (text)
     return text
 
 
@@ -176,6 +178,7 @@ def main(files):
     terms = findTerms(sys.argv[3:])
     qrel = qrels([files[2]])
 
+    
     options = input("1 - binary, 2 - not?")
     for q in topics:
         rank = ranks(topics[q], terms, options)
