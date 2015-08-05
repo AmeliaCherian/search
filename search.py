@@ -7,7 +7,7 @@ from porterstemmer import toStem
 
 #python search.py topics/301-350.T qrels/301-350.cd45.LA docs/*
 
-def xml(options, arg, d):
+def xml(options, arg, d, n):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
 
@@ -15,7 +15,7 @@ def xml(options, arg, d):
     final=d
 
     these = soup.find_all('doc')
-    
+    n+= len(these)
     for docs in these:
         the = ''
         docno = docs.find('docno')
@@ -38,7 +38,8 @@ def xml(options, arg, d):
         
         final[docno.get_text().strip()] = the.split(' ')
 
-    return final
+        #HERE
+    return [final, n]
 
 def readfiles(f):
     # takes a file that contains names of files
@@ -63,11 +64,11 @@ def formatText(text):
     exclude = set(string.punctuation)
     #exclude2 = set(str(b) for b in range(0, 10))
     text = ''.join(ch for ch in text if ch not in exclude) #and ch not in exclude2)
+    text = toStem([text])
     text = re.sub( '\s+', ' ', text).strip()
     text = ' '.join(text.split())
     text.strip()
-    text = toStem([text])
-    print (text)
+    
     return text
 
 
@@ -99,9 +100,14 @@ def findTerms(files):
     # parses the text
     text = {}
     options = input("1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ")
+    n = 0
     
     for theFile in files:
-        text = (xml(options, theFile, text))
+        #HERE
+        something = (xml(options, theFile, text, n))
+        n = something[1]
+        text = something [0]
+    print (n)
      
     # goes through each word in each of the documents
     # and adds it to a term dictionary
@@ -146,11 +152,16 @@ def ranks (q, terms, options):
     query = q
     keyWords = formatText(query).split(' ')
 
+    print (keyWords)
+    
     # goes through each word in the query
     # and adds up the occurences of the words from each document
     foundDocs =defaultdict(lambda:0)
     for word in keyWords:
         if word in terms:
+            print (word)
+            print (terms[word])
+            print()
             for doc in terms[word]:
                 if options == 1:
                     foundDocs[doc]==1
@@ -167,7 +178,7 @@ def main(files):
     with open ("prvalues.txt", "w"): pass
     with open ("ranks.txt", "w"):  pass
 
-
+    
     topic = files[1]
     topics = {}
     with open (topic, 'r') as f:
@@ -177,7 +188,7 @@ def main(files):
     
     terms = findTerms(sys.argv[3:])
     qrel = qrels([files[2]])
-
+    
     
     options = input("1 - binary, 2 - not?")
     for q in topics:
@@ -194,6 +205,7 @@ def main(files):
 
         print (q, topics[q])
         print (evaluate(q, ret, rel))
+        print (len(ret))
         print ('\n')
 
         
