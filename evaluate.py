@@ -11,7 +11,7 @@ def evaluate (id, rlist, qrel):
 
     rel = len(relList)
 
-    print (rlist)
+    #print (rlist)
     print (relList)
     
     if ret!=0 and rel!=0:

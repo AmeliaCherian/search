@@ -5,45 +5,44 @@ from bs4 import BeautifulSoup
 from evaluate import evaluate
 from porterstemmer import toStem
 
+# python search.py topics/ten.T qrels/ten.LA docs/*
 
-def xml(parserOption, files, d):
+
+def xml(parserOption, files, final):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
 
     soup = BeautifulSoup(open(files), 'lxml')
-    final=d
 
-    these = soup.find_all('doc')
+    docList = soup.find_all('doc')
     
-    for docs in these:
+    for doc in docList:
         # DOC
-        the = ''
-        docno = docs.find('docno')
+        included = ''
+        docno = doc.find('docno')
         if parserOption == '1':
-            the += formatText(str(docs))
+            included += formatText(str(doc))
 
         # DOC w/o tags
-        if parserOption == '2':
-           the += formatText(docs.get_text())
+        elif parserOption == '2':
+           included += formatText(doc.get_text())
 
         # TEXT  
-        if parserOption == '3':
-            text2 = docs.find_all('text')
-            for words in text2:
-                the += formatText(str(text2))
+        elif parserOption == '3':
+            text = doc.find_all('text')
+            for words in text:
+                included += formatText(str(text))
 
         # TEXT w/o tags
-        if parserOption == '4':
-            text = docs.find_all('text')
+        elif parserOption == '4':
+            text = doc.find_all('text')
             for words in text:
-                the += formatText(words.get_text())
+                included += formatText(words.get_text())
 
         
-        final[docno.get_text().strip()] = the.split(' ')
+        final[docno.get_text().strip()] = included.split(' ')
 
     return final
-
-
 
 
 def formatText(text):
@@ -77,7 +76,7 @@ def qrels(files):
                 torf = (info[3]).replace('\n', '')
                 qrel[info[0]][info[2]]=torf
 
-    return (qrel)
+    return qrel
 
 
 # ORIGINAL WEIGHT IS IN search/ser.txt
@@ -102,9 +101,6 @@ def weight(options, tf, n, N, l, A):
     return listing
 
 
-
-
-
 def findTerms(files):
     #files = readfiles(files[3])
 
@@ -118,12 +114,13 @@ def findTerms(files):
     text = {}
     options = input('1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ')
     
-    for theFile in files:
-        text = (xml(options, theFile, text))
+    for f in files:
+        text = (xml(options, f, text))
      
     # goes through each word in each of the documents
     # and adds it to a term dictionary
     terms = defaultdict(lambda: defaultdict(lambda:0))
+
     for docNo in text:
         for y in text[docNo]:
             if y not in stop:
@@ -134,19 +131,15 @@ def findTerms(files):
     return [terms, l]
 
 
-
-
 def ranks (q, terms):    
-    
-    # user input
+
     keyWords = formatText(q).split(' ')
     
     foundDocs =defaultdict(lambda:0)
     for word in keyWords:
         if word in terms:
-            print (word)
-            print (terms[word])
-            print()
+            #print (word)
+            #print (terms[word])
             for doc in terms[word]:
             	foundDocs[doc]+=terms[word][doc]
     
@@ -154,16 +147,15 @@ def ranks (q, terms):
 
 
 
-
 def main(files):
+    
     #clears files
     with open ('prvalues.txt', 'w'): pass
     with open ('ranks.txt', 'w'):  pass
 
     #goes through the topics file and makes a dict
-    topic = files[1]
     topics = {}
-    with open (topic, 'r') as f:
+    with open (files[1], 'r') as f:
         for lines in f:
             info = lines.split(' ')
             topics[info[0]] = ' '.join(info[1:])
@@ -194,26 +186,27 @@ def main(files):
             	thing = weight(wOptions, terms[x][y], n, N, l[y], avg)
             	terms[x][y] = thing[-1]
 
-
+    output = ''
+    
     for q in topics:
         rank = ranks(topics[q], terms)
         some = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
         ret = list(rank.keys())
         
         count = 0
-        output = ''
         for doc in some:
             count+=1
             output += (q+' Q0 '+doc[0]+' '+str(count)+' '+str(doc[1])+' x\n')
 
-        with open ('ranks.txt', 'w') as f:
-            f.write(output)
             
         rel = qrel[q]
 
         print (q, topics[q])
         print (evaluate(q, ret, rel))
         print ('\n')
+    
+    with open ('ranks.txt', 'w') as f:
+            f.write(output)
 
         
 if __name__=="__main__":
