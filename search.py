@@ -5,32 +5,35 @@ from bs4 import BeautifulSoup
 from evaluate import evaluate
 from porterstemmer import toStem
 
-#python search.py topics/301-350.T qrels/301-350.cd45.LA docs/*
 
-def xml(options, arg, d):
+def xml(parserOption, files, d):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
 
-    soup = BeautifulSoup(open(arg), 'lxml')
+    soup = BeautifulSoup(open(files), 'lxml')
     final=d
 
     these = soup.find_all('doc')
     
     for docs in these:
+        # DOC
         the = ''
         docno = docs.find('docno')
-        if options == '1':
+        if parserOption == '1':
             the += formatText(str(docs))
-            
-        if options == '2':
+
+        # DOC w/o tags
+        if parserOption == '2':
            the += formatText(docs.get_text())
-           
-        if options == '3':
+
+        # TEXT  
+        if parserOption == '3':
             text2 = docs.find_all('text')
             for words in text2:
                 the += formatText(str(text2))
-               
-        if options == '4':
+
+        # TEXT w/o tags
+        if parserOption == '4':
             text = docs.find_all('text')
             for words in text:
                 the += formatText(words.get_text())
@@ -41,7 +44,29 @@ def xml(options, arg, d):
     return final
 
 
+
+
+def formatText(text):
+    # formats the user input:
+    #  - makes it all lowercase
+    #  - replaces punctuation and numbers with spaces
+    #  - removes multiple spaces
     
+    text = text.lower()
+    text = text.replace('-', ' ')
+
+    exclude = set(string.punctuation)
+    text = ''.join(ch for ch in text if ch not in exclude)
+
+    text = toStem([text])
+    text = re.sub( '\s+', ' ', text).strip()
+
+    text = ' '.join(text.split())
+    text.strip()
+    
+    return text
+
+
 def qrels(files):
     # files is a list of files
     qrel = defaultdict(lambda: defaultdict(lambda: 0))
@@ -53,39 +78,6 @@ def qrels(files):
                 qrel[info[0]][info[2]]=torf
 
     return (qrel)
-
-
-
-
-
-def findTerms(files):
-    #files = readfiles(files[3])
-
-    stop = ["a", "an", "and", "are", "as", "at", "be", "but", "by",
-            "for", "if", "in", "into", "is", "it", "no", "not", "of",
-            "on", "or", "such", "that", "the", "their", "then", "there",
-            "these", "they", "this", "to", "was", "will", "with"]
-    
-    # parses the text
-    text = {}
-    options = input("1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ")
-    
-    for theFile in files:
-        text = (xml(options, theFile, text))
-     
-    # goes through each word in each of the documents
-    # and adds it to a term dictionary
-    terms = defaultdict(lambda: defaultdict(lambda:0))
-    for docNo in text:
-        for y in text[docNo]:
-            if y not in stop:
-                terms[y][docNo]+=1
-
-    print (list(islice(terms.items(), 5)))
-    print (list(islice(text.items(), 5)))
-    return [terms, text]
-    
-
 
 
 # ORIGINAL WEIGHT IS IN search/ser.txt
@@ -110,36 +102,45 @@ def weight(options, tf, n, N, l, A):
     return listing
 
 
+
+
+
+def findTerms(files):
+    #files = readfiles(files[3])
+
+    stop = ["a", "an", "and", "are", "as", "at", "be", "but", "by",
+            "could", "do", "did", "for", "if", "in", "into", "is",
+            "it", "for", "had", "has", "no", "not", "of",
+            "on", "or", "such", "that", "the", "them", "their", "then", "there",
+            "these", "they", "this", "to", "was", "will", "with"]
     
-def ranks (q, files, options):    
+    # parses the text
+    text = {}
+    options = input('1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ')
+    
+    for theFile in files:
+        text = (xml(options, theFile, text))
+     
+    # goes through each word in each of the documents
+    # and adds it to a term dictionary
+    terms = defaultdict(lambda: defaultdict(lambda:0))
+    for docNo in text:
+        for y in text[docNo]:
+            if y not in stop:
+                terms[y][docNo]+=1
+
+    l = {x:len(text[x]) for x in text}
+    
+    return [terms, l]
+
+
+
+
+def ranks (q, terms):    
     
     # user input
-    query = q
-    keyWords = formatText(query).split(' ')
-
-    print (keyWords, options)
+    keyWords = formatText(q).split(' ')
     
-    # goes through each word in the query
-    # and adds up the occurences of the words from each document
-
-    found = findTerms(files)
-    print (found)
-    terms = found[0]
-    text = found [1]
-    
-    if options != '1':
-        another = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
-        N = len(text)
-
-        lengths = [len(x) for x in text]
-        avg = float(sum(lengths))/len(lengths)
-
-        for x in terms:
-            n = len(terms[x])
-            for y in terms[x]:
-            	thing = weight(another, terms[x][y], n, N, len(text[y]), avg)
-            	terms[x][y] = thing[-1]
-
     foundDocs =defaultdict(lambda:0)
     for word in keyWords:
         if word in terms:
@@ -149,65 +150,68 @@ def ranks (q, files, options):
             for doc in terms[word]:
             	foundDocs[doc]+=terms[word][doc]
     
-    # prints the sorted (in reverse) dictionary
-    foundDocs = dict(sorted(foundDocs.items(), key=operator.itemgetter(1), reverse=True))
     return foundDocs
 
 
 
-def formatText(text):
-    # formats the user input:
-    #  - makes it all lowercase
-    #  - replaces punctuation and numbers with spaces
-    #  - removes multiple spaces
-    
-    text = text.lower()
-    text = text.replace('-', ' ')
-    exclude = set(string.punctuation)
-    #exclude2 = set(str(b) for b in range(0, 10))
-    text = ''.join(ch for ch in text if ch not in exclude) #and ch not in exclude2)
-    text = toStem([text])
-    text = re.sub( '\s+', ' ', text).strip()
-    text = ' '.join(text.split())
-    text.strip()
-    
-    return text
-
-
 
 def main(files):
-    
-    # clears files
-    with open ("prvalues.txt", "w"): pass
-    with open ("ranks.txt", "w"):  pass
+    #clears files
+    with open ('prvalues.txt', 'w'): pass
+    with open ('ranks.txt', 'w'):  pass
 
-    
+    #goes through the topics file and makes a dict
     topic = files[1]
     topics = {}
     with open (topic, 'r') as f:
         for lines in f:
             info = lines.split(' ')
             topics[info[0]] = ' '.join(info[1:])
-    
-    terms = findTerms(sys.argv[3:])
+
+    # goes through a qrels file
+    # makes a dict {query: list of rel docs}
     qrel = qrels([files[2]])
+
+
+    # goes through the text of all the docs
+    # makes a term dict, also lengths of docs
+    found = findTerms(files)
+    terms = found[0]
+    l = found [1]
+
     
+    binOptions = input('1 - binary, 2 - not?')
     
-    options = input("1 - binary, 2 - not?")
+    if binOptions != '1':
+        wOptions = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
+        N = len(l)
+
+        avg = float(sum(l.values()))/len(l)
+
+        for x in terms:
+            n = len(terms[x])
+            for y in terms[x]:
+            	thing = weight(wOptions, terms[x][y], n, N, l[y], avg)
+            	terms[x][y] = thing[-1]
+
 
     for q in topics:
-        rank = ranks(topics[q], sys.argv[3:], options)
+        rank = ranks(topics[q], terms)
         some = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
         ret = list(rank.keys())
+        
         count = 0
+        output = ''
         for doc in some:
-            with open ('ranks.txt', 'a') as f:
-                count+=1
-                f.write(q+' Q0 '+doc[0]+' '+str(count)+' '+str(doc[1])+' x\n')
-   
+            count+=1
+            output += (q+' Q0 '+doc[0]+' '+str(count)+' '+str(doc[1])+' x\n')
+
+        with open ('ranks.txt', 'w') as f:
+            f.write(output)
+            
         rel = qrel[q]
 
-        #print (q, topics[q])
+        print (q, topics[q])
         print (evaluate(q, ret, rel))
         print ('\n')
 
@@ -215,3 +219,7 @@ def main(files):
 if __name__=="__main__":
     #q = input('Search: ')
     main(sys.argv)
+
+    
+    
+
