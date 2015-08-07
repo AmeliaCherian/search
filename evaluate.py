@@ -13,6 +13,7 @@ def evaluate (id, rlist, qrel):
 
     print (rlist)
     print (relList)
+    
     if ret!=0 and rel!=0:
         retrel=0
         for docno in rlist:
