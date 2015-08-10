@@ -20,27 +20,27 @@ def xml(parserOption, files, final):
         # DOC
         included = ''
         docno = doc.find('docno')
-        if parserOption == '1':
+        if '1' in parserOption:
             included += formatText(str(doc))
 
         # DOC w/o tags
-        elif parserOption == '2':
+        elif '2' in parserOption:
            included += formatText(doc.get_text())
 
         # TEXT  
-        elif parserOption == '3':
+        elif '3' in parserOption:
             text = doc.find_all('text')
             for words in text:
                 included += formatText(str(text))
 
         # TEXT w/o tags
-        elif parserOption == '4':
+        elif '4' in parserOption:
             text = doc.find_all('text')
             for words in text:
                 included += formatText(words.get_text())
-
         
-        final[docno.get_text().strip()] = included.split(' ')
+        if included!='':
+            final[docno.get_text().strip()] = included.split(' ')
 
     return final
 
@@ -67,6 +67,7 @@ def formatText(text):
 
 
 def qrels(files):
+    
     # files is a list of files
     qrel = defaultdict(lambda: defaultdict(lambda: 0))
     for x in files:
@@ -81,6 +82,7 @@ def qrels(files):
 
 # ORIGINAL WEIGHT IS IN search/ser.txt
 def weight(options, tf, n, N, l, A):
+    
     # tf = term frequency
     # n = num docs with term
     # N = num docs total
@@ -94,6 +96,7 @@ def weight(options, tf, n, N, l, A):
     
     # l = length of current doc
     # A = average length of docs
+    
     if '2' in options:
         w = w/((l/A)**(1/2))
         listing.append(w)
@@ -102,8 +105,7 @@ def weight(options, tf, n, N, l, A):
 
 
 def findTerms(files):
-    #files = readfiles(files[3])
-
+    
     stop = ["a", "an", "and", "are", "as", "at", "be", "but", "by",
             "could", "do", "did", "for", "if", "in", "into", "is",
             "it", "for", "had", "has", "no", "not", "of",
@@ -170,14 +172,13 @@ def main(files):
     found = findTerms(files)
     terms = found[0]
     l = found [1]
-
+    N = len(l)
     
-    binOptions = input('1 - binary, 2 - not?')
+    binOptions = input('1 - binary, 2 - not? ')
     
     if binOptions != '1':
         wOptions = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
-        N = len(l)
-
+        
         avg = float(sum(l.values()))/len(l)
 
         for x in terms:
@@ -186,23 +187,25 @@ def main(files):
             	thing = weight(wOptions, terms[x][y], n, N, l[y], avg)
             	terms[x][y] = thing[-1]
 
+    else:
+        terms = {y:{x:1 for x in terms[y] if x!=0} for y in terms}
+        
     output = ''
     
     for q in topics:
         rank = ranks(topics[q], terms)
-        some = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
+        sortRank = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
         ret = list(rank.keys())
         
         count = 0
-        for doc in some:
+        for doc in sortRank:
             count+=1
             output += (q+' Q0 '+doc[0]+' '+str(count)+' '+str(doc[1])+' x\n')
-
-            
+        
         rel = qrel[q]
 
         print (q, topics[q])
-        print (evaluate(q, ret, rel))
+        print (evaluate(q, ret, rel, N))
         print ('\n')
     
     with open ('ranks.txt', 'w') as f:

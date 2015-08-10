@@ -1,7 +1,7 @@
 import sys
 #from search import main, findTerms
 
-def evaluate (id, rlist, qrel):
+def evaluate (id, rlist, qrel, numDocs):
     ret = len(rlist)
 
     relList = []
@@ -13,19 +13,24 @@ def evaluate (id, rlist, qrel):
 
     #print (rlist)
     print (relList)
-    
+
+    fP = 0
     if ret!=0 and rel!=0:
         retrel=0
         for docno in rlist:
-            if docno in qrel:
-                if qrel[docno]=='1':
-                    retrel+=1
+            if docno in relList:
+                retrel+=1
+            else:
+                fP +=1
+        fN = len(list(x for x in relList if x not in rlist))
+        tN = numDocs - rel - fP
+
+        fPRate = (fP/(fP+tN))
+        specificity =  (tN/(fP+tN))
+        
         
         precision = retrel/ret
         recall = retrel/rel
         with open ("prvalues.txt", "a") as f:
             f.write(id+' '+str(precision)+' '+str(recall)+'\n')
         return (precision, recall)
-
-#if __name__ == '__main__':
-#    evaluate(sys.argv)
