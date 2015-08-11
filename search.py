@@ -12,9 +12,8 @@ def xml(parserOption, files, final):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
 
-    soup = BeautifulSoup(open(files), 'lxml')
-
-    docList = soup.find_all('doc')
+    p = BeautifulSoup(open(files), 'lxml')
+    docList = p.find_all('doc')
     
     for doc in docList:
         # DOC
@@ -66,21 +65,20 @@ def formatText(text):
     return text
 
 
-def qrels(files):
+def findQrels(files):
     
     # files is a list of files
     qrel = defaultdict(lambda: defaultdict(lambda: 0))
     for x in files:
-         with open (x, 'r') as f:
+        with open (x, 'r') as f:
             for lines in f:
                 info = lines.split(' ')
                 torf = (info[3]).replace('\n', '')
-                qrel[info[0]][info[2]]=torf
+                qrel[info[0]][info[2]] = torf
 
     return qrel
 
 
-# ORIGINAL WEIGHT IS IN search/ser.txt
 def weight(options, tf, n, N, l, A):
     
     # tf = term frequency
@@ -89,14 +87,16 @@ def weight(options, tf, n, N, l, A):
 
     w = tf
     listing = [tf]
-    
+
+    # idf
     if '1' in options:
-        w = w *math.log((N/n), 2)
+        w = w*math.log((N/n), 2)
         listing.append(w)
     
     # l = length of current doc
     # A = average length of docs
-    
+
+    # length normalization
     if '2' in options:
         w = w/((l/A)**(1/2))
         listing.append(w)
@@ -109,8 +109,9 @@ def findTerms(files):
     stop = ["a", "an", "and", "are", "as", "at", "be", "but", "by",
             "could", "do", "did", "for", "if", "in", "into", "is",
             "it", "for", "had", "has", "no", "not", "of",
-            "on", "or", "such", "that", "the", "them", "their", "then", "there",
-            "these", "they", "this", "to", "was", "will", "with"]
+            "on", "or", "such", "that", "the", "them",
+            "their", "then", "there", "these", "they",
+            "this", "to", "was", "will", "with"]
     
     # parses the text
     text = {}
@@ -133,7 +134,7 @@ def findTerms(files):
     return [terms, l]
 
 
-def ranks (q, terms):    
+def getRanks (q, terms):    
 
     keyWords = formatText(q).split(' ')
     
@@ -146,7 +147,6 @@ def ranks (q, terms):
             	foundDocs[doc]+=terms[word][doc]
     
     return foundDocs
-
 
 
 def main(files):
@@ -164,7 +164,7 @@ def main(files):
 
     # goes through a qrels file
     # makes a dict {query: list of rel docs}
-    qrel = qrels([files[2]])
+    qrel = findQrels([files[2]])
 
 
     # goes through the text of all the docs
@@ -177,7 +177,7 @@ def main(files):
     binOptions = input('1 - binary, 2 - not? ')
     
     if binOptions != '1':
-        wOptions = input ('enter: \t1 - idf,\n\t2 - length normalization: ')
+        wOptions = input ('enter: 1 - idf, 2 - length normalization: ')
         
         avg = float(sum(l.values()))/len(l)
 
@@ -191,29 +191,35 @@ def main(files):
         terms = {y:{x:1 for x in terms[y] if x!=0} for y in terms}
         
     output = ''
+    ap = []
     
     for q in topics:
-        rank = ranks(topics[q], terms)
+        #q is the topic number
+        rank = getRanks(topics[q], terms)
         sortRank = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
-        ret = list(rank.keys())
+        ret = list(x[0] for x in sortRank)
         
+        # for the export
         count = 0
         for doc in sortRank:
             count+=1
             output += (q+' Q0 '+doc[0]+' '+str(count)+' '+str(doc[1])+' x\n')
-        
+
         rel = qrel[q]
 
-        print (q, topics[q])
-        print (evaluate(q, ret, rel, N))
+        print (q, topics[q].replace('\n', ''))
+        ap.append(evaluate(q, ret, rel, N))
+        print (ap)
         print ('\n')
-    
+        
+    maps  = sum(ap)/len(ap)
+    print (maps)
+    # exports precision and recall values
     with open ('ranks.txt', 'w') as f:
             f.write(output)
 
-        
+
 if __name__=="__main__":
-    #q = input('Search: ')
     main(sys.argv)
 
     
