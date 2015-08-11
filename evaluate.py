@@ -36,7 +36,22 @@ def evaluate (id, rlist, qrel, numDocs):
         sumP += precision
         recall = retrel/rel
         
-        data.append([precision, recall])
+        data.append([recall, precision])
+    
+    ps = {thing[0]:thing[1] for thing in data}
+    for some in range(0, 11):
+        n = some/10
+        max = 0
+        for l in ps:
+            print (n, l, ps[l])
+            if l==n:
+                max = ps[l]
+                break
+            elif l>n and ps[l]>max:
+                max = ps[l]
+        x.append(max)
+    print (x)
+    print ()
         
     with open ('prvalues.txt', 'a') as f:
         for x in data:

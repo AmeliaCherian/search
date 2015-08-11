@@ -209,10 +209,10 @@ def main(files):
 
         print (q, topics[q].replace('\n', ''))
         ap.append(evaluate(q, ret, rel, N))
-        print (ap)
         print ('\n')
         
     maps  = sum(ap)/len(ap)
+    print (ap)
     print (maps)
     # exports precision and recall values
     with open ('ranks.txt', 'w') as f:
