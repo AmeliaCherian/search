@@ -148,32 +148,10 @@ def getRanks (q, terms):
     
     return foundDocs
 
-
-def main(files):
-    
-    #clears files
-    with open ('prvalues.txt', 'w'): pass
-    with open ('ranks.txt', 'w'):  pass
-
-    #goes through the topics file and makes a dict
-    topics = {}
-    with open (files[1], 'r') as f:
-        for lines in f:
-            info = lines.split(' ')
-            topics[info[0]] = ' '.join(info[1:])
-
-    # goes through a qrels file
-    # makes a dict {query: list of rel docs}
-    qrel = findQrels([files[2]])
-
-
+def get(terms, l):
     # goes through the text of all the docs
     # makes a term dict, also lengths of docs
-    found = findTerms(files)
-    terms = found[0]
-    l = found [1]
     N = len(l)
-    
     binOptions = input('1 - binary, 2 - not? ')
     
     if binOptions != '1':
@@ -189,6 +167,32 @@ def main(files):
 
     else:
         terms = {y:{x:1 for x in terms[y] if x!=0} for y in terms}
+
+    return terms
+
+def main(files):
+    
+    #clears files
+    with open ('prvalues.txt', 'w'): pass
+    with open ('ranks.txt', 'w'):  pass
+    with open ('iprec.txt', 'w'): pass
+
+    #goes through the topics file and makes a dict
+    topics = {}
+    with open (files[1], 'r') as f:
+        for lines in f:
+            info = lines.split(' ')
+            topics[info[0]] = ' '.join(info[1:])
+
+    # goes through a qrels file
+    # makes a dict {query: list of rel docs}
+    qrel = findQrels([files[2]])
+
+    found = findTerms(files[3:])
+    terms = found[0]
+    l = found [1]
+    N = len(l)
+    terms = get(terms, l)
         
     output = ''
     ap = []
@@ -214,6 +218,7 @@ def main(files):
     maps  = sum(ap)/len(ap)
     print (ap)
     print (maps)
+    
     # exports precision and recall values
     with open ('ranks.txt', 'w') as f:
             f.write(output)
