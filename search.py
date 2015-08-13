@@ -173,9 +173,9 @@ def get(terms, l):
 def main(files):
     
     #clears files
-    with open ('prvalues.txt', 'w'): pass
-    with open ('ranks.txt', 'w'):  pass
-    with open ('iprec.txt', 'w'): pass
+    with open ('prvalues.txt', 'w'): pass #results
+    with open ('ranks.txt', 'w'):  pass #ranks
+    with open ('iprec.txt', 'w'): pass #interpolation
 
     #goes through the topics file and makes a dict
     topics = {}
