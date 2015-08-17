@@ -3,7 +3,7 @@ import sys
 
 def evaluate (id, rlist, qrel, numDocs):
     ret = len(rlist)
-    # chooses between 10 and length of rank list
+    # chooses smaller between 10 and length of rank list
     k = min(10, ret)
 
     # goes through the qrel and makes a list of relevant docs

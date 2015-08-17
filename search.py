@@ -4,6 +4,8 @@ from collections import defaultdict
 from bs4 import BeautifulSoup
 from evaluate import evaluate
 from porterstemmer import toStem
+from os.path import isfile, join
+from os import listdir, walk
 
 # python search.py topics/ten.T qrels/ten.LA docs/*
 
@@ -42,6 +44,16 @@ def xml(parserOption, files, final):
             final[docno.get_text().strip()] = included.split(' ')
 
     return final
+
+
+
+def getFiles(f, root):
+    for x in listdir(root):
+        if isfile(join(root, x)):
+            f.append(join(root, x))
+        else:
+            f = getFiles(f, join(root, x))
+    return f
 
 
 def formatText(text):
@@ -86,12 +98,10 @@ def weight(options, tf, n, N, l, A):
     # N = num docs total
 
     w = tf
-    listing = [tf]
 
     # idf
     if '1' in options:
         w = w*math.log((N/n), 2)
-        listing.append(w)
     
     # l = length of current doc
     # A = average length of docs
@@ -99,9 +109,8 @@ def weight(options, tf, n, N, l, A):
     # length normalization
     if '2' in options:
         w = w/((l/A)**(1/2))
-        listing.append(w)
        
-    return listing
+    return w
 
 
 def findTerms(files):
@@ -139,10 +148,11 @@ def getRanks (q, terms):
     keyWords = formatText(q).split(' ')
     
     foundDocs =defaultdict(lambda:0)
+
+    # goes through the key words
+    # finds the key words in the term dict
     for word in keyWords:
         if word in terms:
-            #print (word)
-            #print (terms[word])
             for doc in terms[word]:
             	foundDocs[doc]+=terms[word][doc]
     
@@ -162,8 +172,7 @@ def get(terms, l):
         for x in terms:
             n = len(terms[x])
             for y in terms[x]:
-            	thing = weight(wOptions, terms[x][y], n, N, l[y], avg)
-            	terms[x][y] = thing[-1]
+            	terms[x][y] = weight(wOptions, terms[x][y], n, N, l[y], avg)
 
     else:
         terms = {y:{x:1 for x in terms[y] if x!=0} for y in terms}
@@ -188,7 +197,12 @@ def main(files):
     # makes a dict {query: list of rel docs}
     qrel = findQrels([files[2]])
 
-    found = findTerms(files[3:])
+    # gets the files in the directory
+    root = "/home/collections/latimes_94/latimes_94_text"
+    tim = getFiles([], root)
+    print (tim)
+    
+    found = findTerms(tim)
     terms = found[0]
     l = found [1]
     N = len(l)
