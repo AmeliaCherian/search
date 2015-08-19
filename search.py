@@ -7,7 +7,8 @@ from porterstemmer import toStem
 from os.path import isfile, join
 from os import listdir, walk
 
-# python search.py topics/ten.T qrels/ten.LA docs/*
+# python search.py [topic docs] [qrel docs] [directory with docs]
+# python search.py topics/ten.T qrels/ten.LA docs
 
 
 def xml(parserOption, files, final):
@@ -198,9 +199,7 @@ def main(files):
     qrel = findQrels([files[2]])
 
     # gets the files in the directory
-    root = "/home/collections/latimes_94/latimes_94_text"
-    tim = getFiles([], root)
-    print (tim)
+    tim = getFiles([], files[3])
     
     found = findTerms(tim)
     terms = found[0]
