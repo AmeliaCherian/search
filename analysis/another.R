@@ -2,7 +2,7 @@ evaluate <- function (fqrel, fRank) {
   qrels = read.table(fqrel, sep = ' ')
   names(qrels) <- c('topic', 'x', 'docno', 'rel')
   
-  
+  ap = c()
   ranks = read.table(fRank, sep = ' ')
   names(ranks)  = c('topic', 'q0', 'docno', 'rank', 'score', 'x')
   
@@ -39,7 +39,6 @@ evaluate <- function (fqrel, fRank) {
       
       #fPRate <- (fP / (fP + tN))
       #specificity <- (tN / (fP + tN))
-      ap <- (1 / rel)
       
       precision <- retrel / (point)
       sumP <- sumP + precision
@@ -77,8 +76,10 @@ evaluate <- function (fqrel, fRank) {
           type = 'o', col = cl[some+1], xlim = c(0.0, 1.0), ylim = c(0.0, 1.0))
     
     print (x)
+    ap=c(ap, (sumP / k))
   }
+   barplot(ap, col=cl, legend.text = TRUE)
+   legend("topright", legend = topicNum, col = cl[1:length(topicNum)], pch = 1, ncol = 5, bty = 'n')
   
   
-  return (sumP / k)
 }
