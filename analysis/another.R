@@ -13,7 +13,7 @@ evaluate <- function (fqrel, fRank) {
     ret <- length(rlist)
     # chooses smaller between 10 and length of rank list
     k <- min(c(10, ret))
-    
+    plot.new
     relList = (subset(qrels, topic == q & rel == '1'))$docno
     
     rel <- length(relList)
@@ -70,16 +70,23 @@ evaluate <- function (fqrel, fRank) {
     b<-c(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
     
     cl <- rainbow(length(topicNum))
+    names(cl) = topicNum
     
     lines (b, x, 
           main = "i-Prec", xlab = "Recall", ylab = "Precision",
-          type = 'o', col = cl[some+1], xlim = c(0.0, 1.0), ylim = c(0.0, 1.0))
+          type = 'o', col = cl[q], xlim = c(0.0, 1.0), ylim = c(0.0, 1.0))
     
     print (x)
     ap=c(ap, (sumP / k))
   }
-   barplot(ap, col=cl, legend.text = TRUE)
-   legend("topright", legend = topicNum, col = cl[1:length(topicNum)], pch = 1, ncol = 5, bty = 'n')
+  names(ap) = topicNum
   
+  n <- readline(prompt="Next ")
+  barplot(sort(ap), col=cl, names.arg = ap$topicNum, las = 2, width = 1)#, legend.text = TRUE)
+  
+  #legend("topleft", legend = topicNum, col = cl, pch = 1, ncol = 5, bty = 'n')
+   
+   n <- readline(prompt="Next ")
+   boxplot(ap)
   
 }

@@ -22,22 +22,23 @@ def xml(parserOption, files, final):
             q = l[1]
             if previous != q:
                 if previous!="":
-                    previous.close()
-                f = open(q, 'r')
+                    f.close()
+                f = open("/Users/aac3/Documents/Disk4_5/"+q, 'r')
                     
             docno = l[0]
             #DOC
             if '1' in parserOption:
-                start, end =  l[2]
+                start, end =  l[2].split(':')
 
             # TEXT  
             elif '3' in parserOption:
-                start, end = l[4]
-            f.seek(start)
-            included = f.read(end-start+1)
+                start, end = l[4].split(':')
+            
+            f.seek(int(start))
+            included = f.read(int(end)-int(start)+1)
 
             if included!='':
-                final[docno.get_text().strip()] = included.split(' ')
+                final[docno] = included.split(' ')
             previous=q
 
     return final
@@ -130,16 +131,15 @@ def findTerms(files):
     # goes through each word in each of the documents
     # and adds it to a term dictionary
     terms = defaultdict(lambda: defaultdict(lambda:0))
+    l = defaultdict(lambda: 0)
 
     for docNo in text:
         for y in text[docNo]:
             if y not in stop:
                 terms[y][docNo]+=1
-
-    l = {x:len(text[x]) for x in text}
-    
+                l[docNo] +=1
+   
     return [terms, l]
-
 
 def getRanks (q, terms):    
 
@@ -177,36 +177,36 @@ def get(terms, l):
 
     return terms
 
-def main(files):
+
     
-    #clears files
+def main(files):
     with open ('prvalues.txt', 'w'): pass #results
     with open ('ranks.txt', 'w'):  pass #ranks
     with open ('iprec.txt', 'w'): pass #interpolation
 
+
     #goes through the topics file and makes a dict
     topics = {}
-    with open (files[1], 'r') as f:
+    with open (sys.argv[1], 'r') as f:
         for lines in f:
             info = lines.split(' ')
             topics[info[0]] = ' '.join(info[1:])
 
-    # goes through a qrels file
-    # makes a dict {query: list of rel docs}
-    qrel = findQrels([files[2]])
+    qrels = findQrels([files[2]])
+
 
     # gets the files in the directory
     #tim = getFiles([], files[3])
     
-    found = findTerms(files[3:])
-    terms = found[0]
-    l = found [1]
+    terms, l = findTerms(files[3:])
     N = len(l)
     terms = get(terms, l)
-        
+
     output = ''
     ap = []
-    
+    #query = input("Enter: ")
+    #topics = [query]
+
     for q in topics:
         #q is the topic number
         rank = getRanks(topics[q], terms)
@@ -220,7 +220,6 @@ def main(files):
             output += (q+' Q0 '+doc[0]+' '+str(count)+' '+str(doc[1])+' x\n')
 
         rel = qrel[q]
-
         print (q, topics[q].replace('\n', ''))
         ap.append(evaluate(q, ret, rel, N))
         print ('\n')
@@ -232,11 +231,8 @@ def main(files):
     # exports precision and recall values
     with open ('ranks.txt', 'w') as f:
             f.write(output)
+        
 
 
 if __name__=="__main__":
     main(sys.argv)
-
-    
-    
-

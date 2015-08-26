@@ -73,10 +73,10 @@ def formatText(text):
     #  - removes multiple spaces
     
     text = text.lower()
-    text = text.replace('-', ' ')
+    #text = text.replace('-', ' ')
 
     exclude = set(string.punctuation)
-    text = ''.join(ch for ch in text if ch not in exclude)
+    text = ' '.join(ch for ch in text if ch not in exclude)
 
     text = toStem([text])
     text = re.sub( '\s+', ' ', text).strip()
@@ -125,18 +125,19 @@ def weight(options, tf, n, N, l, A):
 
 def findTerms(files):
     
-    stop = ["a", "an", "and", "are", "as", "at", "be", "but", "by",
+    stopWords = ["a", "an", "and", "are", "as", "at", "be", "but", "by",
             "could", "do", "did", "for", "if", "in", "into", "is",
             "it", "for", "had", "has", "no", "not", "of",
             "on", "or", "such", "that", "the", "them",
             "their", "then", "there", "these", "they",
             "this", "to", "was", "will", "with"]
+    stop = {word:0 for word in stopWords}
     
     # parses the text
     text = {}
     options = input('1 - DOC, 2 - DOC no tags, 3 - TEXT, 4 - TEXT no tags: ')
     
-    for f in files:
+     for f in files:
         text = (xml(options, f, text))
      
     # goes through each word in each of the documents
@@ -148,33 +149,33 @@ def findTerms(files):
         for y in text[docNo]:
             if y not in stop:
                 terms[y][docNo]+=1
-                l[docNo] +=1
-                
+                l[docNo]+=1
+    
     return terms, l
 
-def getRanks (q, origTerms, l, bOptions):    
+
+def getRanks (q, terms):    
 
     keyWords = formatText(q).split(' ')
     
     foundDocs =defaultdict(lambda:0)
-    terms = {x:origTerms[x] for x in keyWords}
-    terms = get(terms, l, bOptions)
+
     # goes through the key words
     # finds the key words in the term dict
     for word in keyWords:
-        if word in origTerms:
+        if word in terms:
             for doc in terms[word]:
             	foundDocs[doc]+=terms[word][doc]
     
     return foundDocs
 
-def get(terms, l, bOptions):
+def get(terms, l):
     # goes through the text of all the docs
     # makes a term dict, also lengths of docs
     N = len(l)
+    binOptions = input('1 - binary, 2 - not? ')
     
-    
-    if bOptions != '1':
+    if binOptions != '1':
         wOptions = input ('enter: 1 - idf, 2 - length normalization: ')
         
         avg = float(sum(l.values()))/len(l)
@@ -210,18 +211,16 @@ def main(files):
     # gets the files in the directory
     tim = getFiles([], files[3])
     
-    found = findTerms(tim)
-    terms = found[0]
-    l = found [1]
+    terms, l = findTerms(tim)
     N = len(l)
+    terms = get(terms, l)
         
     output = ''
     ap = []
-    binOptions = input('1 - binary, 2 - not? ')
     
     for q in topics:
         #q is the topic number
-        rank = getRanks(topics[q], terms, l, binOptions)
+        rank = getRanks(topics[q], terms)
         sortRank = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
         ret = list(x[0] for x in sortRank)
         

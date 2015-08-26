@@ -14,47 +14,34 @@ from os import listdir, walk
 def xml(parserOption, files, final):
     # takes only the text inside of a p tag
     # of a xml file and returns it as a string
-    try:
-        p = BeautifulSoup(open(files), 'lxml')
-        docList = p.find_all('doc')
- 
-        for doc in docList:
-            # DOC
-            included = ''
-            docno = doc.find('docno')
+    with open (files, 'r') as fp:
+        previous = ""
+        
+        for line in fp:
+            l = line.split(' ')
+            q = l[1]
+            if previous != q:
+                if previous!="":
+                    f.close()
+                f = open("/Users/aac3/Documents/Disk4_5/"+q+, 'r')
+                    
+            docno = l[0]
+            #DOC
             if '1' in parserOption:
-                included += formatText(str(doc))
-
-            # DOC w/o tags
-            elif '2' in parserOption:
-               included += formatText(doc.get_text())
+                start, end =  l[2].split(':')
 
             # TEXT  
             elif '3' in parserOption:
-                text = doc.find_all('text')
-                for words in text:
-                    included += formatText(str(text))
-
-            # TEXT w/o tags
-            elif '4' in parserOption:
-                text = doc.find_all('text')
-                for words in text:
-                    included += formatText(words.get_text())
+                start, end = l[4].split(':')
+            f.seek(int(start))
+            included = f.read(int(end)-int(start)+1)
 
             if included!='':
-                final[docno.get_text().strip()] = included.split(' ')
-    
-    except UnicodeDecodeError:
-        print ()
-    except AttributeError:
-        #NoneType object has no attribute 'get_text'
-        print ("n", files)
-    except:
-        print ("e", sys.exc_info()[0], files )
+                final[docno] = included.split(' ')
+            previous=q
+            print (included)
 
     return final
-
-
 
 def getFiles(f, root):
     for x in listdir(root):
@@ -75,17 +62,13 @@ def formatText(text):
     text = text.lower()
     text = text.replace('-', ' ')
 
-    exclude = set(string.punctuation)
-    text = ''.join(ch for ch in text if ch not in exclude)
-
     text = toStem([text])
-    text = re.sub( '\s+', ' ', text).strip()
-
-    text = ' '.join(text.split())
-    text.strip()
+    text.replace("'", " ")
+    text = re.findall(r"[\w']+", text)
+    text = ' '.join(text)
+    text = text.strip()
     
     return text
-
 
 def findQrels(files):
     
@@ -131,6 +114,7 @@ def findTerms(files):
             "on", "or", "such", "that", "the", "them",
             "their", "then", "there", "these", "they",
             "this", "to", "was", "will", "with"]
+    stop = {word:0 for word in stopWords}
     
     # parses the text
     text = {}
@@ -143,38 +127,38 @@ def findTerms(files):
     # and adds it to a term dictionary
     terms = defaultdict(lambda: defaultdict(lambda:0))
     l = defaultdict(lambda: 0)
-
+    
     for docNo in text:
         for y in text[docNo]:
             if y not in stop:
                 terms[y][docNo]+=1
-                l[docNo] +=1
-                
+                l[docNo]+=1
+    
     return terms, l
 
-def getRanks (q, origTerms, l, bOptions):    
+
+def getRanks (q, terms):    
 
     keyWords = formatText(q).split(' ')
     
     foundDocs =defaultdict(lambda:0)
-    terms = {x:origTerms[x] for x in keyWords}
-    terms = get(terms, l, bOptions)
+
     # goes through the key words
     # finds the key words in the term dict
     for word in keyWords:
-        if word in origTerms:
+        if word in terms:
             for doc in terms[word]:
             	foundDocs[doc]+=terms[word][doc]
     
     return foundDocs
 
-def get(terms, l, bOptions):
+def get(terms, l):
     # goes through the text of all the docs
     # makes a term dict, also lengths of docs
     N = len(l)
+    binOptions = input('1 - binary, 2 - not? ')
     
-    
-    if bOptions != '1':
+    if binOptions != '1':
         wOptions = input ('enter: 1 - idf, 2 - length normalization: ')
         
         avg = float(sum(l.values()))/len(l)
@@ -210,18 +194,18 @@ def main(files):
     # gets the files in the directory
     tim = getFiles([], files[3])
     
-    found = findTerms(tim)
+    terms, l = findTerms(tim)
     terms = found[0]
     l = found [1]
     N = len(l)
+    terms = get(terms, l)
         
     output = ''
     ap = []
-    binOptions = input('1 - binary, 2 - not? ')
     
     for q in topics:
         #q is the topic number
-        rank = getRanks(topics[q], terms, l, binOptions)
+        rank = getRanks(topics[q], terms)
         sortRank = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
         ret = list(x[0] for x in sortRank)
         

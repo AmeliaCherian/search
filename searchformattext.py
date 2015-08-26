@@ -75,14 +75,11 @@ def formatText(text):
     text = text.lower()
     text = text.replace('-', ' ')
 
-    exclude = set(string.punctuation)
-    text = ''.join(ch for ch in text if ch not in exclude)
-
     text = toStem([text])
-    text = re.sub( '\s+', ' ', text).strip()
-
-    text = ' '.join(text.split())
-    text.strip()
+    text.replace("'", " ")
+    text = re.findall(r"[\w']+", text)
+    text = ' '.join(text)
+    text = text.strip()
     
     return text
 
@@ -142,39 +139,39 @@ def findTerms(files):
     # goes through each word in each of the documents
     # and adds it to a term dictionary
     terms = defaultdict(lambda: defaultdict(lambda:0))
-    l = defaultdict(lambda: 0)
 
     for docNo in text:
         for y in text[docNo]:
             if y not in stop:
                 terms[y][docNo]+=1
-                l[docNo] +=1
-                
-    return terms, l
 
-def getRanks (q, origTerms, l, bOptions):    
+    l = {x:len(text[x]) for x in text}
+    
+    return [terms, l]
+
+
+def getRanks (q, terms):    
 
     keyWords = formatText(q).split(' ')
     
     foundDocs =defaultdict(lambda:0)
-    terms = {x:origTerms[x] for x in keyWords}
-    terms = get(terms, l, bOptions)
+
     # goes through the key words
     # finds the key words in the term dict
     for word in keyWords:
-        if word in origTerms:
+        if word in terms:
             for doc in terms[word]:
             	foundDocs[doc]+=terms[word][doc]
     
     return foundDocs
 
-def get(terms, l, bOptions):
+def get(terms, l):
     # goes through the text of all the docs
     # makes a term dict, also lengths of docs
     N = len(l)
+    binOptions = input('1 - binary, 2 - not? ')
     
-    
-    if bOptions != '1':
+    if binOptions != '1':
         wOptions = input ('enter: 1 - idf, 2 - length normalization: ')
         
         avg = float(sum(l.values()))/len(l)
@@ -214,14 +211,14 @@ def main(files):
     terms = found[0]
     l = found [1]
     N = len(l)
+    terms = get(terms, l)
         
     output = ''
     ap = []
-    binOptions = input('1 - binary, 2 - not? ')
     
     for q in topics:
         #q is the topic number
-        rank = getRanks(topics[q], terms, l, binOptions)
+        rank = getRanks(topics[q], terms)
         sortRank = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
         ret = list(x[0] for x in sortRank)
         
