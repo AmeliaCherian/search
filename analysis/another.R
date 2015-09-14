@@ -82,7 +82,7 @@ evaluate <- function (fqrel, fRank) {
   names(ap) = topicNum
   
   n <- readline(prompt="Next ")
-  barplot(sort(ap), col=cl, names.arg = ap$topicNum, las = 2, width = 1)#, legend.text = TRUE)
+  barplot(ap, col=cl, names.arg = topicNum, las = 2, width = 1)#, legend.text = TRUE)
   
   #legend("topleft", legend = topicNum, col = cl, pch = 1, ncol = 5, bty = 'n')
    

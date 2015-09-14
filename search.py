@@ -152,13 +152,14 @@ def findTerms(files):
                 
     return terms, l
 
-def getRanks (q, origTerms, l, bOptions):    
+def getRanks (q, origTerms, l, bOptions, wOptions):    
 
     keyWords = formatText(q).split(' ')
     
     foundDocs =defaultdict(lambda:0)
     terms = {x:origTerms[x] for x in keyWords}
-    terms = get(terms, l, bOptions)
+    
+    terms = get(terms, l, bOptions, wOptions)
     # goes through the key words
     # finds the key words in the term dict
     for word in keyWords:
@@ -168,14 +169,13 @@ def getRanks (q, origTerms, l, bOptions):
     
     return foundDocs
 
-def get(terms, l, bOptions):
+def get(terms, l, bOptions, wOptions):
     # goes through the text of all the docs
     # makes a term dict, also lengths of docs
     N = len(l)
     
     
     if bOptions != '1':
-        wOptions = input ('enter: 1 - idf, 2 - length normalization: ')
         
         avg = float(sum(l.values()))/len(l)
 
@@ -218,10 +218,12 @@ def main(files):
     output = ''
     ap = []
     binOptions = input('1 - binary, 2 - not? ')
+    if binOptions != 1:
+        wOptions = input('enter: 1 - idf, 2 - length normalization: ')
     
     for q in topics:
         #q is the topic number
-        rank = getRanks(topics[q], terms, l, binOptions)
+        rank = getRanks(topics[q], terms, l, binOptions, wOptions)
         sortRank = sorted(rank.items(), key = operator.itemgetter(1), reverse=True)
         ret = list(x[0] for x in sortRank)
         
